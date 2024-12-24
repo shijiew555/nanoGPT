@@ -7,7 +7,7 @@ import numpy as np
 import tiktoken
 from datasets import load_dataset # huggingface datasets
 
-def load_dataset():
+def load():
     # number of workers in .map() call
     # good number to use is ~order number of cpu cores // 2
     num_proc = 8

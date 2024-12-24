@@ -1,6 +1,6 @@
 import time
 from generate_dataset import generate_dataset
-from load_dataset import load_dataset
+from load_dataset import load
 
 
 start_time = time.time()
@@ -11,6 +11,6 @@ print(f"Dataset generation time: {end_time - start_time} seconds")
 
 start_time = time.time()
 # load dataset into .bin file
-load_dataset()
+load()
 end_time = time.time()
 print(f"Dataset load time: {end_time - start_time} seconds")
