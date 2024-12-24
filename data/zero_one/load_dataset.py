@@ -44,9 +44,11 @@ def load_dataset():
         desc="tokenizing the splits",
         num_proc=num_proc,
     )
-
-    os.remove("train.bin")
-    os.remove("val.bin")
+    
+    if os.path.exists("train.bin"):
+        os.remove("train.bin")
+    if os.path.exists("val.bin"):
+        os.remove("val.bin")
     
     # concatenate all the ids in each dataset into one large file we can use for training
     for split, dset in tokenized.items():

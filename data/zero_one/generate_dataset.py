@@ -12,7 +12,8 @@ def generate_dataset():
     output_file = "train.csv"  # Output file name
 
     # remove existing train.csv file
-    os.remove("train.csv")
+    if os.path.exists("train.csv"):
+        os.remove("train.csv")
 
     # Write sequences to file
     with open(output_file, "w") as f:
