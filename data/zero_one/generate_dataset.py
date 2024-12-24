@@ -6,6 +6,11 @@ def generate_sequence(length, p_1=2/3):
     return np.random.choice([0, 1], size=length, p=[1 - p_1, p_1])
 
 def generate_dataset():
+    
+    # switch to working directory
+    current_directory = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(current_directory)
+    
     # Parameters for train.csv
     sequence_length = 1000  # Length of each sequence
     num_sequences = 10000  # Total number of sequences

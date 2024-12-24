@@ -8,6 +8,11 @@ import tiktoken
 from datasets import load_dataset # huggingface datasets
 
 def load():
+    
+    # switch to working directory
+    current_directory = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(current_directory)
+    
     # number of workers in .map() call
     # good number to use is ~order number of cpu cores // 2
     num_proc = 8
