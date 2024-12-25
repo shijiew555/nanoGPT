@@ -51,7 +51,7 @@ gradient_accumulation_steps = 5 * 8 # used to simulate larger batch sizes
 batch_size = 12 # if gradient_accumulation_steps > 1, this is the micro-batch size
 block_size = 1024
 # model
-n_layer = 12
+n_layer = 1
 n_head = 12
 n_embd = 768
 dropout = 0.0 # for pretraining 0 is good, for finetuning try 0.1+
@@ -341,7 +341,7 @@ with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], record_sh
 
 # end profiling and save the profiling result to a CSV file
 with open("profile_results.csv", "w") as f:
-    f.write(prof.key_averages().table(sort_by="self_cuda_time_total", row_limit=-1))
+    f.write(prof.key_averages().table(sort_by="self_cuda_time_total", row_limit=-1, max_name_column_width=100))
 
 if ddp:
     destroy_process_group()
