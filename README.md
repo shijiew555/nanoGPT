@@ -1,62 +1,80 @@
 
-# nanoGPT
+# Optimizer Performance Comparison 
 
-This is a repository for training a one-layer GPT2 model that predicts a distribution of 0 and 1. It is modified from [nanoGPT](https://github.com/karpathy/nanoGPT). When running on a single A100 40GB GPU, the loss converges in 20 minutes. The training code is in `train.py`.
+This is a repository for profiling the performance of different optimizers for training a one-layer GPT2 model that predicts a distribution of 0 and 1, which have probablility of 1/3 and 2/3 respectively. Specifically, the step time for each optimizer is measured and compared.
 
 
 
 ## install
 
 ```
-pip install torch numpy transformers datasets tiktoken wandb tqdm
+pip install torch numpy matplotlib seaborn lightning
 ```
 
 Dependencies:
 
 - [pytorch](https://pytorch.org) <3
 - [numpy](https://numpy.org/install/) <3
--  `transformers` for huggingface transformers <3 (to load GPT-2 checkpoints)
--  `datasets` for huggingface datasets <3 (if you want to download + preprocess OpenWebText)
--  `tiktoken` for OpenAI's fast BPE code <3
--  `wandb` for optional logging <3
--  `tqdm` for progress bars <3
+-  `matplotlib` 
+-  `seaborn` 
+-  `lightning` 
 
-## dataset generation
-The dataset and dataset generation code is located in `data/zero_one` folder.
 
-To prepare the dataset: 
-``` 
-python data/zero_one/prepare.py 
+## Usage
+```
+python3 lightning_train.py
 ```
 
-The code uses random number generator to generate 10000 sequences of 1000 words consisting of 0 and 1, which have probablility of 1/3 and 2/3 respectively. This part of the code takes 2.55 seconds.
+## Methodology
 
-Then, the code uses huggingface datasets library to tokenize the dataset and then encode each token with GPT-2 encoding. It then loads the encoded dataset into training and validation datasets, train.bin and val.bin respectively. This part of the code takes 6.20 seconds.
+### Dataset and Model
 
-## training
+- **Dataset**: A custom dataset was created (`GenerateDataset`) where each sequence represents a series of coin flips with a probability of heads set to 0.666. The dataset includes 1000 samples with each sequence having a length of 10 flips. The dataset is generated on the fly every time when a batch is requested.
 
-To train the model:
-```
-!python train.py config/train_gpt2.py --compile=False --dataset=zero_one
-```
+- **Model**: A simplified version of a transformer model (`GPT2`) with nanoGPT was used. The model only contains 1 layer for fast training.
 
-The total training time until loss convergence is 73902.72 ms. Evaluation calculation of validation loss happens every 40 iterations. Below is the output of time, loss, and mfu associated with iterations and steps. The final evaluation's validation loss is 0.6430.
+### Optimizer Comparison
 
-![repro124m](assets/training_iterations.png)
+- **SGD**: Known for its simplicity, SGD updates parameters based on the gradient of the loss function for each mini-batch.
+- **Adam**: An adaptive learning rate method that computes individual learning rates for different parameters from estimates of the first and second moments of the gradients.
 
-The loss converges after 150 iterations at loss=0.6643. Below is the loss graph:
-![repro124m](assets/loss_over_iterations.png)
+### Training Procedure
 
-## Optimizations
-I changed the batch size from 4 to 64 and set block size to 512 to fully utilize the VRAM of A100. The peak GPU memory consumption is 26 GB. 
+- The model was trained for one epoch using both SGD and Adam optimizers with identical learning rates.
+- The time taken for the optimizer step operation was measured for each optimizer over all iterations.
 
-I also experimented with different combinations of batch size and block size that product to the same number tokens (512*64), but no variation is observed in iterations to converge. This makes sense since our sequence to predict is very simple and it can be learned easily without much tuning.
+### Data Analysis
 
-Another optimization that could be applied is to reduce the amount of evaluations on validation dataset. As shown in output in training section, the iterations right after evaluation takes the longest. This is resulted from the context switching between evaluation and training modes.
+- **Timing Data**: The time taken for optimizer to step for an iteration was recorded for each optimizer during training.
+- **Bootstrap Resampling**: To estimate the distribution of mean times, bootstrap resampling was performed 1000 times for each optimizer's timing data.
 
-## profiling results
-I used pytorch profiler to profile the amount of CPU and GPU time that each low level routine takes. Below is top 32 routines from the result that consumed the most GPU time:
+### Visualization
 
-![repro124m](assets/torchprofiler.png)
+- **Box Plot**: Showcased the distribution of times for each optimizer, highlighting central tendency and variability.
+- **Bootstrap Distribution**: A histogram was created to visualize the distribution of mean times from bootstrap resampling, allowing for comparison between SGD and Adam.
+- **Time Diff Plot**: A histogram shows the distribution of SGD time - Adam time, which allows a more strightforward way to compare the difference between SGD and Adam.
 
-From the profiling result we can see that routines that consumed the most GPU(CUDA) times are matrix multiplication (aten::mm, ampere...), tensor copy(aten::copy), flash attention, and elementwise operations (at::native::unrolled_elementwise_kernel, at::native::vectorized_elementwise_kernel, and activation function routines)
+
+## Profiling Results
+- **Unoptimized Total Time for each Operation (Adam)**: 
+  ![Table](profiled_adam_times.png "Time Diff Results")
+
+- **Step Time Difference Plot**: 
+  ![Boxplot](timediff.png "Time Diff Results")
+  The plot indicated that:
+  - The time difference between SGD and Adam is negative, so SGD is faster than Adam to perform an optimizer step.
+
+- **Box Plot**: 
+  ![Boxplot](boxplot.png "Boxplot Results")
+  The box plot indicated that:
+  - SGD has lower standard deviation and lower median than Adam
+
+- **Bootstrap Analysis**: 
+  ![Bootstrap Mean Distributions](bootstrap.png "Bootstrap Results")
+  The bootstrap distributions showed:
+  - The results match our conclusion from the time diff plot. SGD generally faster than Adam.
+
+
+
+## Conclusion
+SGD is proved to be faster per iteration as compared to Adam due to its simplicity as expected. SGD also has higher consistency as compared to Adam. However, its total training time might be longer if more iterations are needed for convergence.
