@@ -81,7 +81,7 @@ python3 lightning_train.py
 
 ## After Optimization
 - SGD optimizer is used instead of Adam optimizer to perform training and the total times for major operations are profiled:
-  ![Boxplot](profiled_SGD_times.png "Time Diff Results")
+![Boxplot](profiled_SGD_times.png "Time Diff Results")
 - The total optimizer step time is lowered by 20% by using SGD optimizer.
 
 ## Conclusion
