@@ -25,8 +25,8 @@ python3 lightning_train.py
 
 ## Bottleneck in Training Pipeline
 - Broad exploratory profiling is performed on the total time for major operations like loading a batch of data, forward pass, backward pass, and optimizer step for Adam optimizer:
-  ![Table](profiled_Adam_times.png "profiled_Adam_times")The table indicates that:
-  - Optimizer step is the major bottleneck as it takes up the most amount of time among all operations
+![Table](profiled_Adam_times.png "profiled_Adam_times")
+- The table indicated that optimizer step is the major bottleneck as it takes up the most amount of time among all operations
 
 
 ## Methodology
@@ -81,9 +81,8 @@ python3 lightning_train.py
 
 ## After Optimization
 - SGD optimizer is used instead of Adam optimizer to perform training and the total times for major operations are profiled:
-![Boxplot](profiled_SGD_times.png "Time Diff Results")
-The table indicated that:
-  - The total optimizer step time is lowered by 20% by using SGD optimizer.
+  ![Boxplot](profiled_SGD_times.png "Time Diff Results")
+- The total optimizer step time is lowered by 20% by using SGD optimizer.
 
 ## Conclusion
 SGD is proved to be faster per iteration as compared to Adam due to its simplicity as expected. SGD also has higher consistency as compared to Adam. However, its total training time might be longer if more iterations are needed for convergence.
