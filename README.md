@@ -26,7 +26,7 @@ python3 lightning_train.py
 ## Bottleneck in Training Pipeline
 - Broad exploratory profiling is performed on the total time for major operations like loading a batch of data, forward pass, backward pass, and optimizer step for Adam optimizer:
   ![Table](profiled_Adam_times.png "profiled_Adam_times")The table indicates that:
-  - Optimizer step takes up the most amount of time compared to other operations
+  - Optimizer step is the major bottleneck as it takes up the most amount of time among all operations
 
 
 ## Methodology
@@ -52,7 +52,8 @@ python3 lightning_train.py
 ### Data Analysis
 
 - **Timing Data**: The time taken for optimizer to step for an iteration was recorded for each optimizer during training.
-- **Bootstrap Resampling**: To estimate the distribution of mean times, bootstrap resampling was performed 1000 times for each optimizer's timing data.
+- **Bootstrap Resampling**: To estimate the distribution of mean times, bootstrap resampl
+- **Removing outlier**: The measurements in the first step is excluded due to initialization and cold cache, which is not representative of all steps.
 
 ### Visualization
 
