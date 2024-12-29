@@ -1,9 +1,7 @@
 
-# Optimizer Performance Comparison 
+# Optimizer Performance Comparison and Optimization
 
-This is a repository for profiling the performance of different optimizers for training a one-layer GPT2 model that predicts a distribution of 0 and 1, which have probablility of 1/3 and 2/3 respectively. Specifically, the step time for each optimizer is measured and compared.
-
-
+This is a repository for profiling and optimizing the performance of training a one-layer GPT2 model that predicts a distribution of 0 and 1, which have probablility of 1/3 and 2/3 respectively. 
 
 ## install
 
@@ -25,13 +23,21 @@ Dependencies:
 python3 lightning_train.py
 ```
 
+## Bottleneck in Training Pipeline
+- Broad exploratory profiling is performed on the total time for major operations like loading a batch of data, forward pass, backward pass, and optimizer step for Adam optimizer:
+  ![Table](profiled_Adam_times.png "profiled_Adam_times")The table indicates that:
+  - Optimizer step takes up the most amount of time compared to other operations
+
+
 ## Methodology
 
 ### Dataset and Model
 
-- **Dataset**: A custom dataset was created (`GenerateDataset`) where each sequence represents a series of coin flips with a probability of heads set to 0.666. The dataset includes 1000 samples with each sequence having a length of 10 flips. The dataset is generated on the fly every time when a batch is requested.
+- **Dataset**: A custom dataset was created (`GenerateDataset`) where each sequence represents a series of coin flips with a probability of heads set to 0.666. The dataset includes 1000 samples with each sequence having a length of 10 flips. The dataset is generated on the fly every time when a batch is requested. 
 
 - **Model**: A simplified version of a transformer model (`GPT2`) with nanoGPT was used. The model only contains 1 layer for fast training.
+
+- **Training**: The model is trained 32 steps with a batch size of 32.
 
 ### Optimizer Comparison
 
@@ -56,8 +62,6 @@ python3 lightning_train.py
 
 
 ## Profiling Results
-- **Unoptimized Total Time for each Operation (Adam)**: 
-  ![Table](profiled_adam_times.png "Time Diff Results")
 
 - **Step Time Difference Plot**: 
   ![Boxplot](timediff.png "Time Diff Results")
@@ -74,7 +78,11 @@ python3 lightning_train.py
   The bootstrap distributions showed:
   - The results match our conclusion from the time diff plot. SGD generally faster than Adam.
 
-
+## After Optimization
+- SGD optimizer is used instead of Adam optimizer to perform training and the total times for major operations are profiled:
+![Boxplot](profiled_SGD_times.png "Time Diff Results")
+The table indicated that:
+  - The total optimizer step time is lowered by 20% by using SGD optimizer.
 
 ## Conclusion
 SGD is proved to be faster per iteration as compared to Adam due to its simplicity as expected. SGD also has higher consistency as compared to Adam. However, its total training time might be longer if more iterations are needed for convergence.

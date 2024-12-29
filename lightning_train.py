@@ -35,7 +35,7 @@ class CoinFlipModel(L.LightningModule):
         self.model = model
         self.optimizer_type = optimizer_type
         self.training_times = []
-        self.forward_time = 0
+        self.forward_time = []
 
     def training_step(self, batch, batch_idx):
         inputs = batch[:, :-1]
@@ -43,7 +43,7 @@ class CoinFlipModel(L.LightningModule):
         start_time = time.time()
         logits, loss = self.model(inputs, targets)
         elapsed_time = time.time() - start_time
-        self.forward_time += elapsed_time
+        self.forward_time.append(elapsed_time)
         self.log("train_loss", loss)
         return loss
 
@@ -98,19 +98,18 @@ def train_model(
     optimizer_step_times = trainer.profiler.recorded_durations['[LightningModule]CoinFlipModel.optimizer_step'][1:]
     trainer.profiler.recorded_durations['forward_time'] = pl_model.forward_time
     
-    if optimizer_type == 'Adam':
-        record_time(trainer.profiler.recorded_durations)
+    record_time(optimizer_type, trainer.profiler.recorded_durations)
     
     return optimizer_step_times
 
-def record_time(recorded_durations):
+def record_time(optimizer_type, recorded_durations):
     # Data for the table
     rows = [
         ["Operations", "Total Time (Seconds)"],
-        ["Batch Load", sum(recorded_durations['[_TrainingEpochLoop].train_dataloader_next'])],
-        ["Forward Pass", recorded_durations['forward_time']],
-        ["Backward Pass", sum(recorded_durations['[Strategy]SingleDeviceStrategy.backward'])],
-        ["Optimizer Step", sum(recorded_durations['[LightningModule]CoinFlipModel.optimizer_step'])],
+        ["Batch Load", sum(recorded_durations['[_TrainingEpochLoop].train_dataloader_next'][1:])],
+        ["Forward Pass", sum(recorded_durations['forward_time'][1:])],
+        ["Backward Pass", sum(recorded_durations['[Strategy]SingleDeviceStrategy.backward'][1:])],
+        ["Optimizer Step", sum(recorded_durations['[LightningModule]CoinFlipModel.optimizer_step'][1:])],
     ]
     
     plt.figure(figsize=(4, 4))
@@ -130,7 +129,7 @@ def record_time(recorded_durations):
     )
     
     # Save the plot
-    table_path = os.path.join("profiled_adam_times.png")
+    table_path = os.path.join(f"profiled_{optimizer_type}_times.png")
     plt.savefig(table_path)
     plt.close()
 
@@ -162,8 +161,8 @@ def plot_time_distributions(sgd_times, adam_times):
     plt.figure(figsize=(12, 6))
 
     data = {
-        "SGD": sgd_times,
-        "Adam": adam_times,
+        "SGD": sgd_times[1:],
+        "Adam": adam_times[1:],
     }
     sns.boxplot(data=data)
     plt.title("Optimizer Step Time Distribution for SGD vs Adam Optimizer")
